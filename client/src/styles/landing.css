@@ -183,12 +183,24 @@
 .social-icons a:hover { color:var(--primary); }
 
 @media (max-width:768px) {
-  .hero-inner { grid-template-columns:1fr; }
-  .features-grid { grid-template-columns:1fr 1fr; }
+  .hero-inner { grid-template-columns:1fr; gap: 2rem; }
+  .features-grid { grid-template-columns:1fr; } /* True mobile column */
   .steps-grid { grid-template-columns:1fr; }
   .steps-grid::before { display:none; }
-  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .stats-grid { grid-template-columns:repeat(2,1fr); padding: 2rem 5%; }
   .pricing-grid { grid-template-columns:1fr; }
-  .footer-top { grid-template-columns:1fr 1fr; }
+  .footer-top { grid-template-columns:1fr 1fr; gap: 2rem; }
   .lp-nav-links { display:none; }
+  
+  .hero-text h1 { font-size: 2.2rem; }
+  .lp-section { padding: 3rem 5%; }
+  .mockup { transform: none; box-shadow: 0 10px 40px rgba(0,0,0,0.5); } /* Remove 3D skew to fit screen */
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .footer-top { grid-template-columns: 1fr; }
+  .testi-card { min-width: 260px; }
+  .btn-large { width: 100%; text-align: center; justify-content: center; }
+  .hero-btns { flex-direction: column; width: 100%; gap: 0.5rem; }
 }

@@ -100,7 +100,7 @@ const Workspace = () => {
       {/* Dashboard Returning logic */}
       <button 
         onClick={() => navigate('/dashboard')}
-        className={`absolute top-6 left-6 z-50 p-2.5 border rounded-xl shadow-xl flex items-center gap-2 group backdrop-blur-md transition-all ${theme === 'light' ? 'bg-white/80 border-gray-200 text-gray-700 hover:bg-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}
+        className={`absolute top-4 sm:top-6 left-4 sm:left-6 z-50 p-2 sm:p-2.5 border rounded-xl shadow-xl flex items-center gap-2 group backdrop-blur-md transition-all ${theme === 'light' ? 'bg-white/80 border-gray-200 text-gray-700 hover:bg-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}
       >
         <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
         <span className="hidden xl:inline font-semibold text-sm">Dashboard</span>
@@ -108,16 +108,16 @@ const Workspace = () => {
 
       {/* Cloud Status / Toast Notification */}
       {saveStatus && (
-        <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm shadow-2xl backdrop-blur-md flex items-center gap-2 animate-bounce flex items-center ${theme === 'light' ? 'bg-green-100 border-green-300 text-green-800' : 'bg-green-500/20 border border-green-500/50 text-green-300'}`}>
+        <div className={`absolute bottom-24 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm shadow-2xl backdrop-blur-md flex items-center gap-2 animate-bounce ${theme === 'light' ? 'bg-green-100 border-green-300 text-green-800' : 'bg-green-500/20 border border-green-500/50 text-green-300'}`}>
            <CheckCircle2 size={16} />
            <span className="font-medium tracking-wide">{saveStatus}</span>
         </div>
       )}
 
       {/* Workspace Link info */}
-      <div className={`absolute bottom-6 right-6 z-50 px-4 py-2 border rounded-xl text-xs shadow-xl backdrop-blur-md flex items-center gap-3 transition-colors ${theme === 'light' ? 'bg-white/80 border-gray-200 text-gray-700' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}>
-        <span className={`uppercase tracking-widest font-semibold text-[10px] hidden sm:block ${theme === 'light' ? 'text-gray-500' : 'text-gray-500'}`}>Workspace ID</span>
-        <span className={`font-mono px-2 py-1 rounded select-all cursor-pointer font-bold ${theme === 'light' ? 'bg-gray-100 text-purple-600' : 'bg-black/40 text-purple-300'}`} title="Share this code safely">{roomId}</span>
+      <div className={`absolute top-4 sm:top-auto sm:bottom-6 right-4 sm:right-6 z-50 px-3 sm:px-4 py-1.5 sm:py-2 border rounded-xl text-xs shadow-xl backdrop-blur-md flex items-center gap-2 sm:gap-3 transition-colors ${theme === 'light' ? 'bg-white/80 border-gray-200 text-gray-700' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}>
+        <span className={`uppercase tracking-widest font-semibold text-[10px] hidden sm:block text-gray-500`}>Workspace ID</span>
+        <span className={`font-mono px-2 py-1 rounded select-all cursor-pointer font-bold text-[10px] sm:text-xs ${theme === 'light' ? 'bg-gray-100 text-purple-600' : 'bg-black/40 text-purple-300'}`} title="Share this code safely">{roomId}</span>
       </div>
 
       {/* Canvas */}

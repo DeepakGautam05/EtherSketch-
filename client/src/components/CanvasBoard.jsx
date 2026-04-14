@@ -25,10 +25,12 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
   const [yMap, setYMap] = useState(null);
   const [provider, setProvider] = useState(null);
   
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [textInputPos, setTextInputPos] = useState(null);
   const [activeTextId, setActiveTextId] = useState(null);
   const [textValue, setTextValue] = useState("");
+  const textareaRef = useRef(null);
   
   const undoManagerRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem('userInfo')) || { name: 'Anonymous' };
@@ -91,14 +93,22 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
   const finalizeText = () => {
     if (!activeTextId || !yMap) return;
     const shape = yMap.get(activeTextId);
-    if (shape && textValue.trim().length > 0) {
-       yMap.set(activeTextId, { ...shape, text: textValue });
-    } else {
+    // Rely exclusively on the synced yMap data to determine if empty!
+    if (!shape || !shape.text || shape.text.trim().length === 0) {
        yMap.delete(activeTextId);
     }
     setActiveTextId(null);
     setTextInputPos(null);
   };
+
+  // Prevent instantaneous focus theft by browser's mouseup event spanning over canvas
+  useEffect(() => {
+    if (activeTextId && textareaRef.current) {
+       setTimeout(() => {
+         if (textareaRef.current) textareaRef.current.focus();
+       }, 50);
+    }
+  }, [activeTextId]);
 
   // Initialize Yjs and socket.io sync
   useEffect(() => {
@@ -171,10 +181,16 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
   }, [roomId]);
 
   const handleMouseDown = (e) => {
-    if (!yMap) return;
+    if (!yMap || activeTool === 'hand') return;
     const pos = e.target.getStage().getPointerPosition();
     const id = uuidv4();
     
+    // Prevent overriding existing text nodes. Let them handle their own double-clicks safely!
+    if (e.target && e.target.getClassName && e.target.getClassName() === 'Text') {
+       if (activeTextId) finalizeText();
+       return;
+    }
+
     setIsDrawing(true);
     
     // Erasing logic
@@ -187,7 +203,10 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
     
     // Text Logic
     if (activeTool === 'text') {
-      if (activeTextId) finalizeText(); // finalize previous if any
+      if (activeTextId) {
+         finalizeText(); // finalize previous if any and stop!
+         return; 
+      }
       const newShape = {
         id, type: 'text', x: pos.x, y: pos.y, stroke: color, strokeWidth, text: ''
       };
@@ -267,41 +286,14 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
   };
 
   return (
-    <div className={`w-full h-full ${activeTool === 'eraser' ? 'cursor-none' : 'cursor-crosshair'} relative`} style={{ overflow: 'hidden' }}>
-      {/* Floating Text Input */}
-      {activeTextId && textInputPos && (
-        <textarea
-          autoFocus
-          value={textValue}
-          onChange={(e) => setTextValue(e.target.value)}
-          onBlur={finalizeText}
-          onKeyDown={(e) => { if (e.key === 'Escape') finalizeText(); }}
-          style={{
-            position: 'absolute',
-            top: textInputPos.y,
-            left: textInputPos.x,
-            color: color,
-            fontSize: strokeWidth * 6,
-            background: 'transparent',
-            border: '2px dashed rgba(168, 85, 247, 0.5)',
-            outline: 'none',
-            minWidth: '200px',
-            minHeight: '40px',
-            resize: 'both',
-            zIndex: 100,
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'sans-serif',
-            padding: '4px'
-          }}
-        />
-      )}
+    <div className={`w-full h-full ${activeTool === 'eraser' ? 'cursor-none' : (activeTool === 'hand' ? 'cursor-grab active:cursor-grabbing' : 'cursor-crosshair')} relative`} style={{ overflow: 'hidden' }}>
       {/* Visual Eraser Cursor */}
       {activeTool === 'eraser' && (
          <div 
            style={{
              position: 'absolute',
-             top: mousePos.y - ((strokeWidth * 3) / 2),
-             left: mousePos.x - ((strokeWidth * 3) / 2),
+             top: mousePos.y + stagePos.y - ((strokeWidth * 3) / 2),
+             left: mousePos.x + stagePos.x - ((strokeWidth * 3) / 2),
              width: strokeWidth * 3,
              height: strokeWidth * 3,
              border: '2px solid rgba(168, 85, 247, 0.8)',
@@ -313,6 +305,23 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
          />
       )}
        <Stage
+        x={stagePos.x}
+        y={stagePos.y}
+        draggable={activeTool === 'hand'}
+        onDragMove={(e) => {
+          if (activeTool === 'hand') {
+            setStagePos({ x: e.target.x(), y: e.target.y() });
+          }
+        }}
+        onWheel={(e) => {
+          e.evt.preventDefault();
+          // Slow down the panning speed by a 0.5 modifier
+          const scrollSpeed = 0.5;
+          setStagePos(prev => ({ 
+            x: prev.x - (e.evt.deltaX * scrollSpeed), 
+            y: prev.y - (e.evt.deltaY * scrollSpeed) 
+          }));
+        }}
         width={window.innerWidth}
         height={window.innerHeight}
         onMouseDown={handleMouseDown}
@@ -390,6 +399,7 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
               );
             }
             if (shape.type === 'text') {
+              if (shape.id === activeTextId) return null; // Hide the actual text behind the textarea
               return (
                 <KonvaText
                   key={shape.id}
@@ -398,6 +408,18 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
                   text={shape.text}
                   fill={shape.stroke}
                   fontSize={shape.strokeWidth * 6}
+                  onDblClick={(e) => {
+                     e.cancelBubble = true; 
+                     setActiveTextId(shape.id);
+                     setTextInputPos({ x: shape.x, y: shape.y });
+                     setTextValue(shape.text || '');
+                  }}
+                  onDblTap={(e) => {
+                     e.cancelBubble = true; 
+                     setActiveTextId(shape.id);
+                     setTextInputPos({ x: shape.x, y: shape.y });
+                     setTextValue(shape.text || '');
+                  }}
                 />
               );
             }
@@ -451,6 +473,42 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
           ))}
         </Layer>
       </Stage>
+      
+      {/* Floating Text Input (Rendered after Stage to always be perfectly on top) */}
+      {activeTextId && textInputPos && (
+        <textarea
+          ref={textareaRef}
+          value={textValue}
+          onChange={(e) => {
+             const val = e.target.value;
+             setTextValue(val);
+             if (yMap) {
+                const shape = yMap.get(activeTextId);
+                if (shape) yMap.set(activeTextId, { ...shape, text: val });
+             }
+          }}
+          onBlur={finalizeText}
+          onKeyDown={(e) => { if (e.key === 'Escape') finalizeText(); }}
+          style={{
+            position: 'absolute',
+            top: textInputPos.y + stagePos.y,
+            left: textInputPos.x + stagePos.x,
+            color: color,
+            fontSize: strokeWidth * 6,
+            background: 'transparent',
+            border: '2px dashed rgba(168, 85, 247, 0.8)',
+            outline: 'none',
+            minWidth: '200px',
+            minHeight: '40px',
+            resize: 'both',
+            zIndex: 9999,
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'sans-serif',
+            padding: '4px',
+            boxShadow: '0 0 20px rgba(0,0,0,0.2)'
+          }}
+        />
+      )}
       
       {/* Connecting status indicator */}
       {provider && !provider.synced && (

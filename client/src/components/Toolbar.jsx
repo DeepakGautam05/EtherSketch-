@@ -1,7 +1,8 @@
 import React from 'react';
-import { Pencil, Square, Circle, Minus, MoveRight, Type, Eraser, Undo, Redo, Save, Download, Sun, Moon, Upload } from 'lucide-react';
+import { Pencil, Square, Circle, Minus, MoveRight, Type, Eraser, Undo, Redo, Save, Download, Sun, Moon, Upload, Hand } from 'lucide-react';
 
 const tools = [
+  { id: 'hand', icon: Hand, label: 'Pan Tool' },
   { id: 'pen', icon: Pencil, label: 'Pen' },
   { id: 'rectangle', icon: Square, label: 'Rectangle' },
   { id: 'circle', icon: Circle, label: 'Circle' },
@@ -16,7 +17,7 @@ const strokeWidths = [2, 4, 6, 8, 12];
 
 const Toolbar = ({ activeTool, setActiveTool, color, setColor, strokeWidth, setStrokeWidth, onUndo, onRedo, onManualSave, onExport, onImageUpload, theme, toggleTheme }) => {
   return (
-    <div className={`absolute top-6 left-1/2 transform -translate-x-1/2 ${theme === 'light' ? 'bg-white/90 border-gray-200 text-gray-800 shadow-md' : 'bg-white/5 border-white/10 text-white shadow-2xl'} border rounded-2xl p-2.5 flex flex-wrap gap-3 z-50 items-center justify-center backdrop-blur-xl transition-all w-[95%] xl:w-max duration-500`}>
+    <div className={`absolute bottom-4 sm:bottom-auto sm:top-6 left-1/2 transform -translate-x-1/2 ${theme === 'light' ? 'bg-white/90 border-gray-200 text-gray-800 shadow-md' : 'bg-white/5 border-white/10 text-white shadow-2xl'} border rounded-2xl p-1.5 sm:p-2.5 flex flex-nowrap sm:flex-wrap gap-1.5 sm:gap-3 z-50 items-center justify-start sm:justify-center backdrop-blur-xl transition-all w-[95%] xl:w-max duration-500 overflow-x-auto no-scrollbar`}>
       
       {/* Theme Toggle */}
       <button onClick={toggleTheme} className={`p-2 rounded-lg transition-all ${theme === 'light' ? 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300' : 'bg-white/10 hover:bg-white/20 text-yellow-400'}`}>

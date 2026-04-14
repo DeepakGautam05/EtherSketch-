@@ -56,7 +56,11 @@ function ProjectCard({ project, onOpen, onDelete, onDuplicate, onRename, listVie
   };
 
   return (
-    <div className={`proj-card${listView ? ' list-view' : ''}`} onClick={() => onOpen(project.roomId)}>
+    <div 
+      className={`proj-card${listView ? ' list-view' : ''}`} 
+      onClick={() => onOpen(project.roomId)}
+      style={{ zIndex: menuOpen ? 50 : 1, position: 'relative' }}
+    >
       <div className="proj-thumb">
         <div className="proj-thumb-inner" style={{ background: project.gradient }}>
           <svg viewBox="0 0 200 130" style={{ position:'absolute',inset:0,width:'100%',height:'100%',opacity:.4 }}>
