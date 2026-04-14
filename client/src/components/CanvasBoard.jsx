@@ -32,6 +32,33 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
   const [textValue, setTextValue] = useState("");
   const textareaRef = useRef(null);
   
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({
+    width: 0,
+    height: 0
+  });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+    observer.observe(containerRef.current);
+    
+    // Initial size
+    setDimensions({
+       width: containerRef.current.offsetWidth,
+       height: containerRef.current.offsetHeight
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+  
   const undoManagerRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem('userInfo')) || { name: 'Anonymous' };
   const userColor = useRef('#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'));
@@ -180,9 +207,29 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
     };
   }, [roomId]);
 
+  const getPointerPos = (e) => {
+    if (!containerRef.current || !stageRef.current) return null;
+    const rawEvent = e.evt || e;
+    const clientX = rawEvent.touches ? rawEvent.touches[0]?.clientX : rawEvent.clientX;
+    const clientY = rawEvent.touches ? rawEvent.touches[0]?.clientY : rawEvent.clientY;
+    
+    if (clientX === undefined || clientY === undefined) return null;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const scaleX = stageRef.current.scaleX() || 1;
+    const scaleY = stageRef.current.scaleY() || 1;
+
+    // Mathematical bypass: Calculate raw screen position relative to our physical DOM node independently from Konva's state bugs
+    return {
+      x: (clientX - rect.left - stagePos.x) / scaleX,
+      y: (clientY - rect.top - stagePos.y) / scaleY
+    };
+  };
+
   const handleMouseDown = (e) => {
     if (!yMap || activeTool === 'hand') return;
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = getPointerPos(e);
+    if (!pos) return;
     const id = uuidv4();
     
     // Prevent overriding existing text nodes. Let them handle their own double-clicks safely!
@@ -237,7 +284,10 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
 
   const handleMouseMove = (e) => {
     if (!yMap) return;
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = getPointerPos(e);
+    if (!pos) return;
+    
+    // Update mouse pos for visual eraser
     setMousePos(pos);
     
     // Broadcast Live Cursor
@@ -286,14 +336,14 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
   };
 
   return (
-    <div className={`w-full h-full ${activeTool === 'eraser' ? 'cursor-none' : (activeTool === 'hand' ? 'cursor-grab active:cursor-grabbing' : 'cursor-crosshair')} relative`} style={{ overflow: 'hidden' }}>
+    <div ref={containerRef} className={`w-full h-full ${activeTool === 'eraser' ? 'cursor-none' : (activeTool === 'hand' ? 'cursor-grab active:cursor-grabbing' : 'cursor-crosshair')} relative`} style={{ overflow: 'hidden' }}>
       {/* Visual Eraser Cursor */}
       {activeTool === 'eraser' && (
          <div 
            style={{
              position: 'absolute',
-             top: mousePos.y + stagePos.y - ((strokeWidth * 3) / 2),
-             left: mousePos.x + stagePos.x - ((strokeWidth * 3) / 2),
+             top: mousePos.y * (stageRef.current?.scaleY() || 1) + stagePos.y - ((strokeWidth * 3) / 2),
+             left: mousePos.x * (stageRef.current?.scaleX() || 1) + stagePos.x - ((strokeWidth * 3) / 2),
              width: strokeWidth * 3,
              height: strokeWidth * 3,
              border: '2px solid rgba(168, 85, 247, 0.8)',
@@ -322,8 +372,8 @@ const CanvasBoard = forwardRef(({ roomId, activeTool, color, strokeWidth }, ref)
             y: prev.y - (e.evt.deltaY * scrollSpeed) 
           }));
         }}
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width={dimensions.width}
+        height={dimensions.height}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

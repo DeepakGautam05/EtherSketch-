@@ -77,8 +77,8 @@ const Workspace = () => {
     <div className={`min-h-screen flex flex-col relative overflow-hidden transition-colors duration-500 ${theme === 'light' ? 'bg-[#f4f4f6]' : 'bg-[#121212]'}`}>
       
       {/* Background blobs specific to workspace */}
-      <div className={`absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full filter blur-[128px] opacity-20 transition-all duration-700 ${theme === 'light' ? 'bg-purple-300' : 'bg-purple-600 mix-blend-multiply'}`} style={{ animation: 'blob 7s infinite', animationDelay: '1000ms' }}></div>
-      <div className={`absolute bottom-[-10%] right-[-10%] w-96 h-96 rounded-full filter blur-[128px] opacity-20 transition-all duration-700 ${theme === 'light' ? 'bg-blue-300' : 'bg-blue-600 mix-blend-multiply'}`} style={{ animation: 'blob 7s infinite', animationDelay: '3000ms' }}></div>
+      <div className={`absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full filter blur-[128px] opacity-20 transition-all duration-700 pointer-events-none ${theme === 'light' ? 'bg-purple-300' : 'bg-purple-600 mix-blend-multiply'}`} style={{ animation: 'blob 7s infinite', animationDelay: '1000ms' }}></div>
+      <div className={`absolute bottom-[-10%] right-[-10%] w-96 h-96 rounded-full filter blur-[128px] opacity-20 transition-all duration-700 pointer-events-none ${theme === 'light' ? 'bg-blue-300' : 'bg-blue-600 mix-blend-multiply'}`} style={{ animation: 'blob 7s infinite', animationDelay: '3000ms' }}></div>
 
       {/* Rich Tooling Ribbon */}
       <Toolbar 
@@ -120,8 +120,8 @@ const Workspace = () => {
         <span className={`font-mono px-2 py-1 rounded select-all cursor-pointer font-bold text-[10px] sm:text-xs ${theme === 'light' ? 'bg-gray-100 text-purple-600' : 'bg-black/40 text-purple-300'}`} title="Share this code safely">{roomId}</span>
       </div>
 
-      {/* Canvas */}
-      <div className={`flex-1 relative w-full h-full ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+      {/* Canvas (Positioned absolute to completely fill viewport, preventing invisible browser walls) */}
+      <div className={`absolute inset-0 z-0 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
         <CanvasBoard 
            roomId={roomId} 
            activeTool={activeTool} 
