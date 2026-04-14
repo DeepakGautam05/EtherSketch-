@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 import { SocketIOProvider } from 'y-socket.io';
 import { saveRoom, getRoom } from '../utils/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 const URLImage = ({ src, x, y, width, height }) => {
   const [img, setImg] = useState(null);
